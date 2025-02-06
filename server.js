@@ -19,23 +19,41 @@ const server = http.createServer((req, res) => {
 
 // Create a WebSocket server
 const wss = new WebSocket.Server({ server });
+const clients = new Map();
 
-wss.on('connection', socket => {
-  console.log('New client connected');
-
-  socket.on('message', message => {
-    console.log('Received message:', message);
-
-    // Broadcast the message to all connected clients
-    wss.clients.forEach(client => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(message.toString());
-      }
-    });
+wss.on('connection', (socket) => {
+  socket.on('message', (data) => {
+    const message = JSON.parse(data);
+    if (message.type === 'name') {
+      clients.set(socket, message.name);
+      broadcastNames();
+    } else if (message.type === 'chat') {
+      const name = clients.get(socket);
+      const chatMessage = { name, message: message.message };
+      broadcast(JSON.stringify({ type: 'chat', data: chatMessage }));
+    }
   });
 
-  socket.send('Welcome to the global chat!');
+  socket.on('close', () => {
+    clients.delete(socket);
+    broadcastNames();
+  });
+
+  socket.send(JSON.stringify({ type: 'welcome', message: 'Welcome to the global chat!' }));
 });
+
+function broadcast(data) {
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(data);
+    }
+  });
+}
+
+function broadcastNames() {
+  const names = Array.from(clients.values());
+  broadcast(JSON.stringify({ type: 'names', data: names }));
+}
 
 server.listen(8080, () => {
   console.log('Server is listening on http://localhost:8080');
