@@ -9,7 +9,8 @@
     #chat { height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
     #message { width: 80%; }
     #nameInput, #messageInput { display: block; margin: 10px 0; }
-    #kickButton { display: block; margin-top: 10px; }
+    #kickButton, #showVotesButton { display: block; margin-top: 10px; }
+    .highlight { background-color: yellow; }
   </style>
 </head>
 <body>
@@ -25,7 +26,9 @@
     <button id="sendButton">Send</button>
     <h2>Available Users</h2>
     <ul id="userList"></ul>
+    <button id="noVoteButton" class="highlight">No Vote</button>
     <button id="kickButton" disabled>Kick All</button>
+    <button id="showVotesButton" disabled>Show All Votes</button>
   </div>
 
   <script>
@@ -40,6 +43,9 @@
       const userList = document.getElementById('userList');
       const errorDiv = document.getElementById('error');
       const kickButton = document.getElementById('kickButton');
+      const showVotesButton = document.getElementById('showVotesButton');
+      const noVoteButton = document.getElementById('noVoteButton');
+      let highlightedUser = noVoteButton;
       const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
       const socket = new WebSocket(`${protocol}//${location.host}`);
 
@@ -59,6 +65,17 @@
           message.data.forEach((name) => {
             const userItem = document.createElement('li');
             userItem.textContent = name;
+            const voteButton = document.createElement('button');
+            voteButton.textContent = 'Vote';
+            voteButton.addEventListener('click', () => {
+              if (highlightedUser) {
+                highlightedUser.classList.remove('highlight');
+              }
+              userItem.classList.add('highlight');
+              highlightedUser = userItem;
+              socket.send(JSON.stringify({ type: 'vote', name }));
+            });
+            userItem.appendChild(voteButton);
             userList.appendChild(userItem);
           });
         } else if (message.type === 'welcome') {
@@ -72,6 +89,11 @@
           nameSection.style.display = 'block';
           chatSection.style.display = 'none';
           errorDiv.textContent = 'You have been kicked out by an admin.';
+        } else if (message.type === 'showVotes') {
+          const chatMessage = document.createElement('div');
+          chatMessage.textContent = `System: ${message.votes}`;
+          chat.appendChild(chatMessage);
+          chat.scrollTop = chat.scrollHeight;
         }
       };
 
@@ -87,6 +109,7 @@
           chatSection.style.display = 'block';
           if (name.toLowerCase().includes('admin')) {
             kickButton.disabled = false;
+            showVotesButton.disabled = false;
           }
         }
       });
@@ -101,6 +124,19 @@
 
       kickButton.addEventListener('click', () => {
         socket.send(JSON.stringify({ type: 'kick' }));
+      });
+
+      showVotesButton.addEventListener('click', () => {
+        socket.send(JSON.stringify({ type: 'showVotes' }));
+      });
+
+      noVoteButton.addEventListener('click', () => {
+        if (highlightedUser) {
+          highlightedUser.classList.remove('highlight');
+        }
+        noVoteButton.classList.add('highlight');
+        highlightedUser = noVoteButton;
+        socket.send(JSON.stringify({ type: 'vote', name: 'No Vote' }));
       });
     });
   </script>

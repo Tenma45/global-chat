@@ -20,6 +20,7 @@ const server = http.createServer((req, res) => {
 // Create a WebSocket server
 const wss = new WebSocket.Server({ server });
 const clients = new Map();
+const votes = new Map();
 
 wss.on('connection', (socket) => {
   socket.on('message', (data) => {
@@ -29,6 +30,7 @@ wss.on('connection', (socket) => {
         socket.send(JSON.stringify({ type: 'error', message: 'Name already taken. Please choose a different name.' }));
       } else {
         clients.set(socket, message.name);
+        votes.set(message.name, 'No Vote');
         broadcastNames();
       }
     } else if (message.type === 'chat') {
@@ -38,11 +40,20 @@ wss.on('connection', (socket) => {
     } else if (message.type === 'kick') {
       broadcast(JSON.stringify({ type: 'kick' }));
       clients.clear();
+      votes.clear();
+    } else if (message.type === 'vote') {
+      const name = clients.get(socket);
+      votes.set(name, message.name);
+    } else if (message.type === 'showVotes') {
+      const voteResults = Array.from(votes.entries()).map(([voter, votedFor]) => `${voter} voted for ${votedFor}`).join('\n');
+      socket.send(JSON.stringify({ type: 'chat', data: { name: 'System', message: voteResults } }));
     }
   });
 
   socket.on('close', () => {
+    const name = clients.get(socket);
     clients.delete(socket);
+    votes.delete(name);
     broadcastNames();
   });
 
