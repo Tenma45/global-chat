@@ -162,7 +162,6 @@
         <button id="sendButton">Send</button>
       </div>
       <div id="sessionContainer">
-        <h2>Available Users</h2>
         <ul id="userList"></ul>
         <li id="noVoteItem" class="highlight">
           <span>No Vote</span>
@@ -193,72 +192,90 @@
       const noVoteItem = document.getElementById('noVoteItem');
       let highlightedUser = noVoteItem;
       let currentUserName = '';
-      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const socket = new WebSocket(`${protocol}//${location.host}`);
+      let socket;
 
-      socket.onopen = () => {
-        console.log('WebSocket connection established');
-      };
+      function connectWebSocket() {
+        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        socket = new WebSocket(`${protocol}//${location.host}`);
 
-      socket.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-        if (message.type === 'chat') {
-          const chatMessage = document.createElement('div');
-          chatMessage.innerHTML = `${message.data.name}: ${message.data.message}`;
-          chat.appendChild(chatMessage);
-          chat.scrollTop = chat.scrollHeight;
-        } else if (message.type === 'names') {
-          userList.innerHTML = '';
-          message.data.forEach((name) => {
-            const userItem = document.createElement('li');
-            userItem.textContent = name === currentUserName ? `${name} (You)` : name;
-            const voteButton = document.createElement('button');
-            voteButton.textContent = 'Vote';
-            voteButton.addEventListener('click', () => {
-              if (highlightedUser) {
-                highlightedUser.classList.remove('highlight');
-              }
-              userItem.classList.add('highlight');
-              highlightedUser = userItem;
-              socket.send(JSON.stringify({ type: 'vote', name }));
+        socket.onopen = () => {
+          console.log('WebSocket connection established');
+        };
+
+        socket.onmessage = (event) => {
+          const message = JSON.parse(event.data);
+          if (message.type === 'chat') {
+            const chatMessage = document.createElement('div');
+            chatMessage.innerHTML = `${message.data.name}: ${message.data.message}`;
+            chat.appendChild(chatMessage);
+            chat.scrollTop = chat.scrollHeight;
+          } else if (message.type === 'names') {
+            userList.innerHTML = '';
+            message.data.forEach((name) => {
+              const userItem = document.createElement('li');
+              userItem.textContent = name === currentUserName ? `${name} (You)` : name;
+              const voteButton = document.createElement('button');
+              voteButton.textContent = 'Vote';
+              voteButton.addEventListener('click', () => {
+                if (highlightedUser) {
+                  highlightedUser.classList.remove('highlight');
+                }
+                userItem.classList.add('highlight');
+                highlightedUser = userItem;
+                if (socket.readyState === WebSocket.OPEN) {
+                  socket.send(JSON.stringify({ type: 'vote', name }));
+                }
+              });
+              userItem.appendChild(voteButton);
+              userList.appendChild(userItem);
             });
-            userItem.appendChild(voteButton);
-            userList.appendChild(userItem);
-          });
-          userList.appendChild(noVoteItem); // Add No Vote item to the user list
-        } else if (message.type === 'welcome') {
-          console.log(message.message);
-        } else if (message.type === 'error') {
-          errorDiv.textContent = message.message;
-          nameContainer.classList.add('active');
-          chatPageContainer.classList.remove('active');
-        } else if (message.type === 'kick') {
-          socket.close();
-          nameContainer.classList.add('active');
-          chatPageContainer.classList.remove('active');
-          errorDiv.textContent = 'You have been kicked out by an admin.';
-        } else if (message.type === 'showVotes') {
-          const chatMessage = document.createElement('div');
-          chatMessage.innerHTML = `System:<br>${message.data.message}`;
-          chat.appendChild(chatMessage);
-          chat.scrollTop = chat.scrollHeight;
-        } else if (message.type === 'showVoteResult') {
-          const chatMessage = document.createElement('div');
-          chatMessage.innerHTML = `System:<br>${message.data.message}`;
-          chat.appendChild(chatMessage);
-          chat.scrollTop = chat.scrollHeight;
-        }
-      };
+            userList.appendChild(noVoteItem); // Add No Vote item to the user list
+          } else if (message.type === 'welcome') {
+            console.log(message.message);
+          } else if (message.type === 'error') {
+            errorDiv.textContent = message.message;
+            nameContainer.classList.add('active');
+            chatPageContainer.classList.remove('active');
+            // Clear chat history and user list when rejoining after being kicked
+            chat.innerHTML = '';
+            userList.innerHTML = '';
+          } else if (message.type === 'kick') {
+            socket.close();
+            nameContainer.classList.add('active');
+            chatPageContainer.classList.remove('active');
+            errorDiv.textContent = 'You have been kicked out by an admin.';
+            // Clear chat history and user list when kicked
+            chat.innerHTML = '';
+            userList.innerHTML = '';
+          } else if (message.type === 'clearChat') {
+            // Clear chat history for everyone
+            chat.innerHTML = '';
+          } else if (message.type === 'showVotes') {
+            const chatMessage = document.createElement('div');
+            chatMessage.innerHTML = `System:<br>${message.data.message}`;
+            chat.appendChild(chatMessage);
+            chat.scrollTop = chat.scrollHeight;
+          } else if (message.type === 'showVoteResult') {
+            const chatMessage = document.createElement('div');
+            chatMessage.innerHTML = `System:<br>${message.data.message}`;
+            chat.appendChild(chatMessage);
+            chat.scrollTop = chat.scrollHeight;
+          }
+        };
 
-      socket.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
+        socket.onerror = (error) => {
+          console.error('WebSocket error:', error);
+        };
+      }
 
       joinButton.addEventListener('click', () => {
+        connectWebSocket();
         const name = nameInput.value;
         if (name) {
           currentUserName = name;
-          socket.send(JSON.stringify({ type: 'name', name }));
+          socket.onopen = () => {
+            socket.send(JSON.stringify({ type: 'name', name }));
+          };
           nameContainer.classList.remove('active');
           chatPageContainer.classList.add('active');
           if (name.toLowerCase().includes('admin')) {
@@ -271,22 +288,30 @@
 
       sendButton.addEventListener('click', () => {
         const message = messageInput.value;
-        if (message) {
+        if (message && socket.readyState === WebSocket.OPEN) {
           socket.send(JSON.stringify({ type: 'chat', message }));
           messageInput.value = '';
         }
       });
 
       kickButton.addEventListener('click', () => {
-        socket.send(JSON.stringify({ type: 'kick' }));
+        if (confirm('Are you sure you want to kick all users?')) {
+          if (socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'kick' }));
+          }
+        }
       });
 
       showVotesButton.addEventListener('click', () => {
-        socket.send(JSON.stringify({ type: 'showVotes' }));
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: 'showVotes' }));
+        }
       });
 
       showVoteResultButton.addEventListener('click', () => {
-        socket.send(JSON.stringify({ type: 'showVoteResult' }));
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: 'showVoteResult' }));
+        }
       });
 
       noVoteButton.addEventListener('click', () => {
@@ -295,7 +320,9 @@
         }
         noVoteItem.classList.add('highlight');
         highlightedUser = noVoteItem;
-        socket.send(JSON.stringify({ type: 'vote', name: 'No Vote' }));
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: 'vote', name: 'No Vote' }));
+        }
       });
     });
   </script>

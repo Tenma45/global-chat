@@ -41,19 +41,21 @@ wss.on('connection', (socket) => {
       broadcast(JSON.stringify({ type: 'kick' }));
       clients.clear();
       votes.clear();
+      broadcastNames(); // Clear user list for everyone
+      broadcast(JSON.stringify({ type: 'clearChat' })); // Clear chat history for everyone
     } else if (message.type === 'vote') {
       const name = clients.get(socket);
       votes.set(name, message.name);
     } else if (message.type === 'showVotes') {
       const voteResults = Array.from(votes.entries()).map(([voter, votedFor]) => `${voter} voted for ${votedFor}`).join('\n');
-      broadcast(JSON.stringify({ type: 'chat', data: { name: 'System', message: voteResults.replace(/\n/g, '<br>') } }));
+      broadcast(JSON.stringify({ type: 'chat', data: { name: 'System', message: `\n${voteResults.replace(/\n/g, '<br>')}` } }));
     } else if (message.type === 'showVoteResult') {
       const voteCounts = {};
       votes.forEach((votedFor) => {
         voteCounts[votedFor] = (voteCounts[votedFor] || 0) + 1;
       });
       const voteResultMessage = Object.entries(voteCounts).map(([votedFor, count]) => `${count} voted for ${votedFor}`).join('\n');
-      broadcast(JSON.stringify({ type: 'chat', data: { name: 'System', message: voteResultMessage.replace(/\n/g, '<br>') } }));
+      broadcast(JSON.stringify({ type: 'chat', data: { name: 'System', message: `\n${voteResultMessage.replace(/\n/g, '<br>')}` } }));
     }
   });
 
