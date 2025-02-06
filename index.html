@@ -14,25 +14,28 @@
   <h1>Global Chat</h1>
   <div id="chat"></div>
   <input type="text" id="message" placeholder="Type a message...">
-  <button onclick="sendMessage()">Send</button>
+  <button id="sendButton">Send</button>
 
   <script>
-    const chat = document.getElementById('chat');
-    const messageInput = document.getElementById('message');
-    const socket = new WebSocket(`ws://${location.host}`);
+    document.addEventListener('DOMContentLoaded', (event) => {
+      const chat = document.getElementById('chat');
+      const messageInput = document.getElementById('message');
+      const sendButton = document.getElementById('sendButton');
+      const socket = new WebSocket(`ws://${location.host}`);
 
-    socket.onmessage = event => {
-      const message = document.createElement('div');
-      message.textContent = event.data;
-      chat.appendChild(message);
-      chat.scrollTop = chat.scrollHeight;
-    };
+      socket.onmessage = event => {
+        const message = document.createElement('div');
+        message.textContent = event.data.toString();
+        chat.appendChild(message);
+        chat.scrollTop = chat.scrollHeight;
+      };
 
-    function sendMessage() {
-      const message = messageInput.value;
-      socket.send(message);
-      messageInput.value = '';
-    }
+      sendButton.addEventListener('click', () => {
+        const message = messageInput.value;
+        socket.send(message);
+        messageInput.value = '';
+      });
+    });
   </script>
 </body>
 </html>

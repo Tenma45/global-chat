@@ -46,4 +46,28 @@ public/
 .vuepress/dist/
 
 # Serverless directories
- ▋
+.serverless/
+
+# FuseBox files
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# VS Code directories
+.vscode/
+
+# JetBrains IDE directories
+.idea/
+
+# Sentry CLI files
+.sentryclirc
+
+# MacOS files
+.DS_Store
+
+# Windows thumbnail cache files
+Thumbs.db
