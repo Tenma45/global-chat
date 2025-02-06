@@ -25,12 +25,19 @@ wss.on('connection', (socket) => {
   socket.on('message', (data) => {
     const message = JSON.parse(data);
     if (message.type === 'name') {
-      clients.set(socket, message.name);
-      broadcastNames();
+      if ([...clients.values()].includes(message.name)) {
+        socket.send(JSON.stringify({ type: 'error', message: 'Name already taken. Please choose a different name.' }));
+      } else {
+        clients.set(socket, message.name);
+        broadcastNames();
+      }
     } else if (message.type === 'chat') {
       const name = clients.get(socket);
       const chatMessage = { name, message: message.message };
       broadcast(JSON.stringify({ type: 'chat', data: chatMessage }));
+    } else if (message.type === 'kick') {
+      broadcast(JSON.stringify({ type: 'kick' }));
+      clients.clear();
     }
   });
 

@@ -9,6 +9,7 @@
     #chat { height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
     #message { width: 80%; }
     #nameInput, #messageInput { display: block; margin: 10px 0; }
+    #kickButton { display: block; margin-top: 10px; }
   </style>
 </head>
 <body>
@@ -16,6 +17,7 @@
   <div id="nameSection">
     <input type="text" id="nameInput" placeholder="Enter your name...">
     <button id="joinButton">Join Chat</button>
+    <div id="error" style="color: red;"></div>
   </div>
   <div id="chatSection" style="display:none;">
     <div id="chat"></div>
@@ -23,6 +25,7 @@
     <button id="sendButton">Send</button>
     <h2>Available Users</h2>
     <ul id="userList"></ul>
+    <button id="kickButton" disabled>Kick All</button>
   </div>
 
   <script>
@@ -35,6 +38,8 @@
       const messageInput = document.getElementById('messageInput');
       const sendButton = document.getElementById('sendButton');
       const userList = document.getElementById('userList');
+      const errorDiv = document.getElementById('error');
+      const kickButton = document.getElementById('kickButton');
       const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
       const socket = new WebSocket(`${protocol}//${location.host}`);
 
@@ -58,6 +63,15 @@
           });
         } else if (message.type === 'welcome') {
           console.log(message.message);
+        } else if (message.type === 'error') {
+          errorDiv.textContent = message.message;
+          nameSection.style.display = 'block';
+          chatSection.style.display = 'none';
+        } else if (message.type === 'kick') {
+          socket.close();
+          nameSection.style.display = 'block';
+          chatSection.style.display = 'none';
+          errorDiv.textContent = 'You have been kicked out by an admin.';
         }
       };
 
@@ -71,6 +85,9 @@
           socket.send(JSON.stringify({ type: 'name', name }));
           nameSection.style.display = 'none';
           chatSection.style.display = 'block';
+          if (name.toLowerCase().includes('admin')) {
+            kickButton.disabled = false;
+          }
         }
       });
 
@@ -80,6 +97,10 @@
           socket.send(JSON.stringify({ type: 'chat', message }));
           messageInput.value = '';
         }
+      });
+
+      kickButton.addEventListener('click', () => {
+        socket.send(JSON.stringify({ type: 'kick' }));
       });
     });
   </script>
