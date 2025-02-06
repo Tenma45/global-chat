@@ -23,6 +23,10 @@
       const sendButton = document.getElementById('sendButton');
       const socket = new WebSocket(`ws://${location.host}`);
 
+      socket.onopen = () => {
+        console.log('WebSocket connection established');
+      };
+
       socket.onmessage = event => {
         const message = document.createElement('div');
         message.textContent = event.data.toString();
@@ -30,8 +34,13 @@
         chat.scrollTop = chat.scrollHeight;
       };
 
+      socket.onerror = error => {
+        console.error('WebSocket error:', error);
+      };
+
       sendButton.addEventListener('click', () => {
         const message = messageInput.value;
+        console.log('Sending message:', message);
         socket.send(message);
         messageInput.value = '';
       });
