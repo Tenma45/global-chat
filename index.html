@@ -21,7 +21,8 @@
       const chat = document.getElementById('chat');
       const messageInput = document.getElementById('message');
       const sendButton = document.getElementById('sendButton');
-      const socket = new WebSocket(`ws://${location.host}`);
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const socket = new WebSocket(`${protocol}//${location.host}`);
 
       socket.onopen = () => {
         console.log('WebSocket connection established');
