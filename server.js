@@ -46,7 +46,7 @@ wss.on('connection', (socket) => {
       votes.set(name, message.name);
     } else if (message.type === 'showVotes') {
       const voteResults = Array.from(votes.entries()).map(([voter, votedFor]) => `${voter} voted for ${votedFor}`).join('\n');
-      socket.send(JSON.stringify({ type: 'chat', data: { name: 'System', message: voteResults } }));
+      broadcast(JSON.stringify({ type: 'chat', data: { name: 'System', message: voteResults.replace(/\n/g, '<br>') } }));
     }
   });
 

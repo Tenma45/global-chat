@@ -5,36 +5,179 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Global Chat</title>
   <style>
-    body { font-family: Arial, sans-serif; }
-    #chat { height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
-    #message { width: 80%; }
-    #nameInput, #messageInput { display: block; margin: 10px 0; }
-    #kickButton, #showVotesButton { display: block; margin-top: 10px; }
-    .highlight { background-color: yellow; }
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f7f7f7;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #4a90e2;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    .container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 800px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      background-color: #fff;
+      border-radius: 10px;
+    }
+    .active {
+      display: flex;
+    }
+    #mainContainer {
+      display: flex;
+      gap: 20px;
+      width: 100%;
+      max-width: 1200px;
+    }
+    #chatContainer {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #sessionContainer {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #chat {
+      height: 300px;
+      overflow-y: scroll;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      background-color: #fff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      word-wrap: break-word;
+    }
+    #nameInput, #messageInput {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      width: 100%;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 16px;
+    }
+    #joinButton, #sendButton {
+      background-color: #4a90e2;
+      color: #fff;
+    }
+    #joinButton:hover, #sendButton:hover {
+      background-color: #357ab8;
+    }
+    #kickButton, #showVotesButton {
+      background-color: #f5a623;
+      color: #fff;
+    }
+    #kickButton:disabled, #showVotesButton:disabled {
+      background-color: #ccc;
+      color: #666;
+    }
+    #kickButton:hover:not(:disabled), #showVotesButton:hover:not(:disabled) {
+      background-color: #d4881f;
+    }
+    .highlight {
+      border: 2px solid #4a90e2;
+      box-shadow: 0 0 10px rgba(74, 144, 226, 0.6);
+    }
+    #userList li {
+      margin: 5px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background-color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    #userList li.highlight {
+      border: 2px solid #4a90e2;
+      box-shadow: 0 0 10px rgba(74, 144, 226, 0.6);
+    }
+    #userList li button {
+      background-color: #4a90e2;
+      color: #fff;
+      border-radius: 5px;
+      padding: 5px 10px;
+    }
+    #noVoteItem {
+      margin: 5px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background-color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+    #noVoteItem.highlight {
+      border: 2px solid #4a90e2;
+      box-shadow: 0 0 10px rgba(74, 144, 226, 0.6);
+    }
+    #noVoteItem button {
+      background-color: #4a90e2;
+      color: #fff;
+      border-radius: 5px;
+      padding: 5px 10px;
+    }
   </style>
 </head>
 <body>
-  <h1>Global Chat</h1>
-  <div id="nameSection">
+  <div id="nameContainer" class="container active">
+    <h1>Global Chat</h1>
     <input type="text" id="nameInput" placeholder="Enter your name...">
     <button id="joinButton">Join Chat</button>
     <div id="error" style="color: red;"></div>
   </div>
-  <div id="chatSection" style="display:none;">
-    <div id="chat"></div>
-    <input type="text" id="messageInput" placeholder="Type a message...">
-    <button id="sendButton">Send</button>
-    <h2>Available Users</h2>
-    <ul id="userList"></ul>
-    <button id="noVoteButton" class="highlight">No Vote</button>
-    <button id="kickButton" disabled>Kick All</button>
-    <button id="showVotesButton" disabled>Show All Votes</button>
+  <div id="chatPageContainer" class="container">
+    <h1>Global Chat</h1>
+    <div id="mainContainer">
+      <div id="chatSection">
+        <div id="chat"></div>
+        <input type="text" id="messageInput" placeholder="Type a message...">
+        <button id="sendButton">Send</button>
+      </div>
+      <div id="sessionContainer">
+        <h2>Available Users</h2>
+        <ul id="userList"></ul>
+        <li id="noVoteItem" class="highlight">
+          <span>No Vote</span>
+          <button id="noVoteButton">Vote</button>
+        </li>
+        <button id="kickButton" disabled>Kick All</button>
+        <button id="showVotesButton" disabled>Show All Votes</button>
+      </div>
+    </div>
   </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', (event) => {
-      const nameSection = document.getElementById('nameSection');
-      const chatSection = document.getElementById('chatSection');
+      const nameContainer = document.getElementById('nameContainer');
+      const chatPageContainer = document.getElementById('chatPageContainer');
       const nameInput = document.getElementById('nameInput');
       const joinButton = document.getElementById('joinButton');
       const chat = document.getElementById('chat');
@@ -45,7 +188,8 @@
       const kickButton = document.getElementById('kickButton');
       const showVotesButton = document.getElementById('showVotesButton');
       const noVoteButton = document.getElementById('noVoteButton');
-      let highlightedUser = noVoteButton;
+      const noVoteItem = document.getElementById('noVoteItem');
+      let highlightedUser = noVoteItem;
       const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
       const socket = new WebSocket(`${protocol}//${location.host}`);
 
@@ -57,7 +201,7 @@
         const message = JSON.parse(event.data);
         if (message.type === 'chat') {
           const chatMessage = document.createElement('div');
-          chatMessage.textContent = `${message.data.name}: ${message.data.message}`;
+          chatMessage.innerHTML = `${message.data.name}: ${message.data.message}`;
           chat.appendChild(chatMessage);
           chat.scrollTop = chat.scrollHeight;
         } else if (message.type === 'names') {
@@ -78,20 +222,21 @@
             userItem.appendChild(voteButton);
             userList.appendChild(userItem);
           });
+          userList.appendChild(noVoteItem); // Add No Vote item to the user list
         } else if (message.type === 'welcome') {
           console.log(message.message);
         } else if (message.type === 'error') {
           errorDiv.textContent = message.message;
-          nameSection.style.display = 'block';
-          chatSection.style.display = 'none';
+          nameContainer.classList.add('active');
+          chatPageContainer.classList.remove('active');
         } else if (message.type === 'kick') {
           socket.close();
-          nameSection.style.display = 'block';
-          chatSection.style.display = 'none';
+          nameContainer.classList.add('active');
+          chatPageContainer.classList.remove('active');
           errorDiv.textContent = 'You have been kicked out by an admin.';
         } else if (message.type === 'showVotes') {
           const chatMessage = document.createElement('div');
-          chatMessage.textContent = `System: ${message.votes}`;
+          chatMessage.innerHTML = `System:<br>${message.data.message}`;
           chat.appendChild(chatMessage);
           chat.scrollTop = chat.scrollHeight;
         }
@@ -105,8 +250,8 @@
         const name = nameInput.value;
         if (name) {
           socket.send(JSON.stringify({ type: 'name', name }));
-          nameSection.style.display = 'none';
-          chatSection.style.display = 'block';
+          nameContainer.classList.remove('active');
+          chatPageContainer.classList.add('active');
           if (name.toLowerCase().includes('admin')) {
             kickButton.disabled = false;
             showVotesButton.disabled = false;
@@ -134,8 +279,8 @@
         if (highlightedUser) {
           highlightedUser.classList.remove('highlight');
         }
-        noVoteButton.classList.add('highlight');
-        highlightedUser = noVoteButton;
+        noVoteItem.classList.add('highlight');
+        highlightedUser = noVoteItem;
         socket.send(JSON.stringify({ type: 'vote', name: 'No Vote' }));
       });
     });
