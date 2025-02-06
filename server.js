@@ -47,6 +47,13 @@ wss.on('connection', (socket) => {
     } else if (message.type === 'showVotes') {
       const voteResults = Array.from(votes.entries()).map(([voter, votedFor]) => `${voter} voted for ${votedFor}`).join('\n');
       broadcast(JSON.stringify({ type: 'chat', data: { name: 'System', message: voteResults.replace(/\n/g, '<br>') } }));
+    } else if (message.type === 'showVoteResult') {
+      const voteCounts = {};
+      votes.forEach((votedFor) => {
+        voteCounts[votedFor] = (voteCounts[votedFor] || 0) + 1;
+      });
+      const voteResultMessage = Object.entries(voteCounts).map(([votedFor, count]) => `${count} voted for ${votedFor}`).join('\n');
+      broadcast(JSON.stringify({ type: 'chat', data: { name: 'System', message: voteResultMessage.replace(/\n/g, '<br>') } }));
     }
   });
 
@@ -57,7 +64,7 @@ wss.on('connection', (socket) => {
     broadcastNames();
   });
 
-  socket.send(JSON.stringify({ type: 'welcome', message: 'Welcome to the global chat!' }));
+  socket.send(JSON.stringify({ type: 'welcome', message: "Welcome to Don't Vote Me!" }));
 });
 
 function broadcast(data) {

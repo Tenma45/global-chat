@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Global Chat</title>
+  <title>Don't Vote Me!</title>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -87,15 +87,15 @@
     #joinButton:hover, #sendButton:hover {
       background-color: #357ab8;
     }
-    #kickButton, #showVotesButton {
+    #kickButton, #showVotesButton, #showVoteResultButton {
       background-color: #f5a623;
       color: #fff;
     }
-    #kickButton:disabled, #showVotesButton:disabled {
+    #kickButton:disabled, #showVotesButton:disabled, #showVoteResultButton:disabled {
       background-color: #ccc;
       color: #666;
     }
-    #kickButton:hover:not(:disabled), #showVotesButton:hover:not(:disabled) {
+    #kickButton:hover:not(:disabled), #showVotesButton:hover:not(:disabled), #showVoteResultButton:hover:not(:disabled) {
       background-color: #d4881f;
     }
     .highlight {
@@ -148,13 +148,13 @@
 </head>
 <body>
   <div id="nameContainer" class="container active">
-    <h1>Global Chat</h1>
+    <h1>Don't Vote Me!</h1>
     <input type="text" id="nameInput" placeholder="Enter your name...">
     <button id="joinButton">Join Chat</button>
     <div id="error" style="color: red;"></div>
   </div>
   <div id="chatPageContainer" class="container">
-    <h1>Global Chat</h1>
+    <h1>Don't Vote Me!</h1>
     <div id="mainContainer">
       <div id="chatSection">
         <div id="chat"></div>
@@ -170,6 +170,7 @@
         </li>
         <button id="kickButton" disabled>Kick All</button>
         <button id="showVotesButton" disabled>Show All Votes</button>
+        <button id="showVoteResultButton" disabled>Show Vote Result</button>
       </div>
     </div>
   </div>
@@ -187,9 +188,11 @@
       const errorDiv = document.getElementById('error');
       const kickButton = document.getElementById('kickButton');
       const showVotesButton = document.getElementById('showVotesButton');
+      const showVoteResultButton = document.getElementById('showVoteResultButton');
       const noVoteButton = document.getElementById('noVoteButton');
       const noVoteItem = document.getElementById('noVoteItem');
       let highlightedUser = noVoteItem;
+      let currentUserName = '';
       const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
       const socket = new WebSocket(`${protocol}//${location.host}`);
 
@@ -208,7 +211,7 @@
           userList.innerHTML = '';
           message.data.forEach((name) => {
             const userItem = document.createElement('li');
-            userItem.textContent = name;
+            userItem.textContent = name === currentUserName ? `${name} (You)` : name;
             const voteButton = document.createElement('button');
             voteButton.textContent = 'Vote';
             voteButton.addEventListener('click', () => {
@@ -239,6 +242,11 @@
           chatMessage.innerHTML = `System:<br>${message.data.message}`;
           chat.appendChild(chatMessage);
           chat.scrollTop = chat.scrollHeight;
+        } else if (message.type === 'showVoteResult') {
+          const chatMessage = document.createElement('div');
+          chatMessage.innerHTML = `System:<br>${message.data.message}`;
+          chat.appendChild(chatMessage);
+          chat.scrollTop = chat.scrollHeight;
         }
       };
 
@@ -249,12 +257,14 @@
       joinButton.addEventListener('click', () => {
         const name = nameInput.value;
         if (name) {
+          currentUserName = name;
           socket.send(JSON.stringify({ type: 'name', name }));
           nameContainer.classList.remove('active');
           chatPageContainer.classList.add('active');
           if (name.toLowerCase().includes('admin')) {
             kickButton.disabled = false;
             showVotesButton.disabled = false;
+            showVoteResultButton.disabled = false;
           }
         }
       });
@@ -273,6 +283,10 @@
 
       showVotesButton.addEventListener('click', () => {
         socket.send(JSON.stringify({ type: 'showVotes' }));
+      });
+
+      showVoteResultButton.addEventListener('click', () => {
+        socket.send(JSON.stringify({ type: 'showVoteResult' }));
       });
 
       noVoteButton.addEventListener('click', () => {
