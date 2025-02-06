@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Don't Vote Me!</title>
+  <title>Vote Me!</title>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -43,11 +43,11 @@
       max-width: 1200px;
     }
     #chatSection {
-      flex: 1;
+      flex: 2;
       display: flex;
       flex-direction: column;
       align-items: center;
-      max-width: 600px; /* Adjust this value to control the width of the chat section */
+      max-width: 800px; /* Adjusted value to increase the width of the chat section */
     }
     #sessionContainer {
       flex: 1;
@@ -150,13 +150,13 @@
 </head>
 <body>
   <div id="nameContainer" class="container active">
-    <h1>Don't Vote Me!</h1>
+    <h1>Vote Me!</h1>
     <input type="text" id="nameInput" placeholder="Enter your name...">
     <button id="joinButton">Join Chat</button>
     <div id="error" style="color: red;"></div>
   </div>
   <div id="chatPageContainer" class="container">
-    <h1>Don't Vote Me!</h1>
+    <h1>Vote Me!</h1>
     <div id="mainContainer">
       <div id="chatSection">
         <div id="chat"></div>
@@ -208,7 +208,7 @@
           const message = JSON.parse(event.data);
           if (message.type === 'chat') {
             const chatMessage = document.createElement('div');
-            chatMessage.innerHTML = `${message.data.name}: ${message.data.message}`;
+            chatMessage.innerHTML = `<strong>${message.data.name}:</strong> ${message.data.message}`;
             chat.appendChild(chatMessage);
             chat.scrollTop = chat.scrollHeight;
           } else if (message.type === 'names') {
@@ -254,12 +254,12 @@
             chat.innerHTML = '';
           } else if (message.type === 'showVotes') {
             const chatMessage = document.createElement('div');
-            chatMessage.innerHTML = `System:<br>${message.data.message}`;
+            chatMessage.innerHTML = `<strong>System:</strong><br>${message.data.message}`;
             chat.appendChild(chatMessage);
             chat.scrollTop = chat.scrollHeight;
           } else if (message.type === 'showVoteResult') {
             const chatMessage = document.createElement('div');
-            chatMessage.innerHTML = `System:<br>${message.data.message}`;
+            chatMessage.innerHTML = `<strong>System:</strong><br>${message.data.message}`;
             chat.appendChild(chatMessage);
             chat.scrollTop = chat.scrollHeight;
           }
